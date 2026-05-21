@@ -654,7 +654,15 @@
           field.id = `inp_${name}_${catKey}_${d}`;
           field.disabled = !isAccessible(dates[d]) || (currentUser !== '__admin__' && name !== currentUser);
           field.addEventListener('input', () => {
-            if (catKey === 'comp') formatCompLines(field);
+            if (catKey === 'comp') {
+              formatCompLines(field);
+              const count = field.value.split('\n').filter(l => l.trim() !== '').length;
+              const tussInput = document.getElementById(`inp_${name}_tuss_${d}`);
+              if (tussInput) {
+                tussInput.value = count || '';
+                updateTotal(name, 'tuss');
+              }
+            }
             updateTotal(name, catKey);
           });
           td.appendChild(field);
@@ -683,6 +691,15 @@
         }
         updateTotal(name, cat);
       });
+      for (let d = 0; d < 5; d++) {
+        const compInput = document.getElementById(`inp_${name}_comp_${d}`);
+        if (compInput && compInput.value.trim()) {
+          const count = compInput.value.split('\n').filter(l => l.trim() !== '').length;
+          const tussInput = document.getElementById(`inp_${name}_tuss_${d}`);
+          if (tussInput) tussInput.value = count;
+        }
+      }
+      updateTotal(name, 'tuss');
     });
   }
 
