@@ -240,6 +240,19 @@
     }
 
     td.today-col { background: rgba(46,95,160,0.2); }
+    td.holiday-col { background: rgba(160,40,40,0.18) !important; }
+    thead th.holiday-col { background: rgba(160,40,40,0.3) !important; color: #e07070 !important; }
+    .holiday-label {
+      display: block;
+      text-align: center;
+      color: #e05555;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 0;
+      opacity: 0.85;
+    }
 
     .day-header { display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .day-header .day-name { font-weight: 700; font-size: 12px; }
@@ -584,6 +597,25 @@
     return date.toDateString() === new Date().toDateString();
   }
 
+  const HOLIDAYS = new Set([
+    // 2026 Sabit Tatiller
+    '2026-01-01', '2026-04-23', '2026-05-01', '2026-05-19',
+    '2026-07-15', '2026-08-30', '2026-10-29',
+    // 2026 Ramazan Bayramı (19-21 Mart)
+    '2026-03-19', '2026-03-20', '2026-03-21',
+    // 2026 Kurban Bayramı Arefesi + 4 gün (25-29 Mayıs)
+    '2026-05-25', '2026-05-26', '2026-05-27', '2026-05-28', '2026-05-29',
+    // 2027 Sabit Tatiller
+    '2027-01-01', '2027-04-23', '2027-05-01', '2027-05-19',
+    '2027-07-15', '2027-08-30', '2027-10-29',
+  ]);
+
+  function isHoliday(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return HOLIDAYS.has(d.toISOString().slice(0, 10));
+  }
+
   function refreshInputStates() {
     const dates = getWeekDates(weekOffset);
     PERSONNEL.forEach(name => {
@@ -607,8 +639,8 @@
     headerRow.innerHTML = '<th colspan="2" style="text-align:left; border-right:1px solid #344e6a;">Personnel</th>';
     dates.forEach((date, i) => {
       const th = document.createElement('th');
-      th.className = 'day-th' + (isToday(date) ? ' today-col' : '');
-      th.innerHTML = `<div class="day-header"><span class="day-name">${DAYS_TR[i]}</span><span class="day-date">${formatDate(date)}</span></div>`;
+      th.className = 'day-th' + (isToday(date) ? ' today-col' : '') + (isHoliday(date) ? ' holiday-col' : '');
+      th.innerHTML = `<div class="day-header"><span class="day-name">${DAYS_TR[i]}</span><span class="day-date">${formatDate(date)}</span>${isHoliday(date) ? '<span style="font-size:9px;color:#e07070;letter-spacing:1px;">HOLIDAY</span>' : ''}</div>`;
       headerRow.appendChild(th);
     });
     const thTotal = document.createElement('th');
@@ -641,6 +673,17 @@
         for (let d = 0; d < 5; d++) {
           const td = document.createElement('td');
           if (isToday(dates[d])) td.classList.add('today-col');
+          if (isHoliday(dates[d])) {
+            td.classList.add('holiday-col');
+            if (ci === 0) {
+              const span = document.createElement('span');
+              span.className = 'holiday-label';
+              span.textContent = 'Holiday';
+              td.appendChild(span);
+            }
+            tr.appendChild(td);
+            continue;
+          }
           let field;
           if (catKey === 'comp') {
             field = document.createElement('textarea');
