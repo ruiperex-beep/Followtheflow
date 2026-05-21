@@ -395,7 +395,7 @@
 </header>
 
 <div class="user-bar" id="userBar" style="display:none;">
-  <button onclick="changeUser()">Change User</button>
+  <button id="changeUserBtn" onclick="changeUser()" style="display:none;">Change User</button>
 </div>
 
 <div class="week-nav">
@@ -486,6 +486,7 @@
     document.getElementById('selectOverlay').style.display = 'none';
     document.getElementById('userBar').style.display = 'flex';
     document.getElementById('userLabel').textContent = name === '__admin__' ? 'View All' : name;
+    document.getElementById('changeUserBtn').style.display = name === '__admin__' ? 'inline-block' : 'none';
     render();
   }
 
