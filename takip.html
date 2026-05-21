@@ -395,21 +395,14 @@
 </header>
 
 <div class="user-bar" id="userBar" style="display:none;">
-  <button id="changeUserBtn" onclick="changeUser()" style="display:none;">Change User</button>
+  Logged in as: <strong id="userLabel"></strong>
+  <button onclick="changeUser()">Change</button>
 </div>
 
 <div class="week-nav">
   <button id="prevBtn" onclick="changeWeek(-1)">&#8592; Previous Week</button>
   <div class="week-label" id="weekLabel"></div>
   <button onclick="changeWeek(1)">Next Week &#8594;</button>
-  <a href="https://suitsfinance-my.sharepoint.com/:x:/r/personal/omer_suitsfinance_nl/Documents/BTWCode.xlsx?d=w901bb7098c144c33bd1e9fae09460f1a&csf=1&web=1&e=Lncvs9" target="_blank"
-    style="display:inline-flex; align-items:center; gap:8px; background:#1e3a5c; color:#c8dff0; text-decoration:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; font-family:'Inter',sans-serif; letter-spacing:0.5px; border:1px solid #344e6a; transition:background 0.2s;"
-    onmouseover="this.style.background='#2e4a6a'" onmouseout="this.style.background='#1e3a5c'">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8.5 19l-1.7-3h1.2l1 2 1-2h1.2L9.5 19H8.5zm3.5 0v-3h1v3h-1zm2-3h2v1h-1.3v.5h1.2v1h-1.2V18H16v1h-2v-3z"/>
-    </svg>
-    BTW Code
-  </a>
 </div>
 
 <div class="table-wrapper">
@@ -486,7 +479,6 @@
     document.getElementById('selectOverlay').style.display = 'none';
     document.getElementById('userBar').style.display = 'flex';
     document.getElementById('userLabel').textContent = name === '__admin__' ? 'View All' : name;
-    document.getElementById('changeUserBtn').style.display = name === '__admin__' ? 'inline-block' : 'none';
     render();
   }
 
@@ -620,11 +612,10 @@
 
   function isAccessible(date) {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const d = new Date(date);
-    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    if (day < today) return true;
-    if (day > today) return false;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dateOnly = new Date(date); dateOnly.setHours(0,0,0,0);
+    if (dateOnly < today) return true;
+    if (dateOnly > today) return false;
     return now.getHours() >= 16;
   }
 
@@ -781,18 +772,23 @@
       }
       updateTotal(name, 'tuss');
     });
-    refreshInputStates();
   }
 
   async function changeWeek(dir) {
+    if (weekOffset + dir < 0) return;
     weekOffset += dir;
     await render();
-    document.getElementById('prevBtn').disabled = false;
+    document.getElementById('prevBtn').disabled = weekOffset === 0;
   }
 
-  localStorage.removeItem('currentUser');
+  const savedUser = localStorage.getItem('currentUser');
+  if (savedUser && PERSONNEL.includes(savedUser)) {
+    selectUser(savedUser);
+  }
 
-  render();
+  render().then(() => {
+    document.getElementById('prevBtn').disabled = true;
+  });
 
   setInterval(refreshInputStates, 60000);
 </script>
