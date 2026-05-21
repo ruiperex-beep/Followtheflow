@@ -618,13 +618,13 @@
     }
   }
 
-  function isAccessible(date, isOwnRow) {
+  function isAccessible(date) {
     const now = new Date();
-    const today = new Date(); today.setHours(0,0,0,0);
-    const dateOnly = new Date(date); dateOnly.setHours(0,0,0,0);
-    if (dateOnly < today) return true;
-    if (dateOnly > today) return false;
-    // Bugün: 4pm'den itibaren açık
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const d = new Date(date);
+    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    if (day < today) return true;
+    if (day > today) return false;
     return now.getHours() >= 16;
   }
 
@@ -781,6 +781,7 @@
       }
       updateTotal(name, 'tuss');
     });
+    refreshInputStates();
   }
 
   async function changeWeek(dir) {
