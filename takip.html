@@ -618,12 +618,13 @@
     }
   }
 
-  function isAccessible(date) {
+  function isAccessible(date, isOwnRow) {
     const now = new Date();
     const today = new Date(); today.setHours(0,0,0,0);
     const dateOnly = new Date(date); dateOnly.setHours(0,0,0,0);
     if (dateOnly < today) return true;
     if (dateOnly > today) return false;
+    // Bugün: 4pm'den itibaren açık
     return now.getHours() >= 16;
   }
 
@@ -783,17 +784,14 @@
   }
 
   async function changeWeek(dir) {
-    if (weekOffset + dir < 0) return;
     weekOffset += dir;
     await render();
-    document.getElementById('prevBtn').disabled = weekOffset === 0;
+    document.getElementById('prevBtn').disabled = false;
   }
 
   localStorage.removeItem('currentUser');
 
-  render().then(() => {
-    document.getElementById('prevBtn').disabled = true;
-  });
+  render();
 
   setInterval(refreshInputStates, 60000);
 </script>
