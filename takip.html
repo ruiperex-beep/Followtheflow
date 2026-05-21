@@ -428,8 +428,8 @@
 
   const PERSONNEL = ['Canan', 'Furkan', 'İlkem', 'Görkem'];
   const DAYS_TR = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  const CATEGORIES = ['Tussenrekeningen', 'Completed Companies'];
-  const CAT_KEYS = ['tuss', 'comp'];
+  const CATEGORIES = ['Tussenrekeningen', 'Total Number of Transactions', 'Completed Companies'];
+  const CAT_KEYS = ['tuss', 'trans', 'comp'];
 
   let weekOffset = 0;
   let currentUser = null;
@@ -559,7 +559,7 @@
   function updateTotal(name, catKey) {
     const el = document.getElementById(`total_${name}_${catKey}`);
     if (!el) return;
-    if (catKey === 'tuss') {
+    if (catKey === 'tuss' || catKey === 'trans') {
       let sum = 0;
       for (let d = 0; d < 5; d++) {
         const input = document.getElementById(`inp_${name}_${catKey}_${d}`);
@@ -634,7 +634,7 @@
         }
 
         const catTd = document.createElement('td');
-        catTd.className = 'category-cell' + (ci === 1 ? ' total-cat' : '');
+        catTd.className = 'category-cell' + (ci === CATEGORIES.length - 1 ? ' total-cat' : '');
         catTd.textContent = catLabel;
         tr.appendChild(catTd);
 
