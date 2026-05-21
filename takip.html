@@ -374,7 +374,16 @@
       <button onclick="selectUser('Furkan')">Furkan</button>
       <button onclick="selectUser('İlkem')">İlkem</button>
       <button onclick="selectUser('Görkem')">Görkem</button>
-      <button onclick="selectUser('__admin__')" style="margin-top:8px; border-color:#c45000; color:#c45000;">View All</button>
+    </div>
+    <div id="adminArea" style="margin-top:20px; text-align:center;">
+      <span onclick="toggleAdminInput()" style="font-size:11px; color:#3a5878; cursor:pointer; letter-spacing:1px;">⚙</span>
+    </div>
+    <div id="adminInputArea" style="display:none; margin-top:10px; text-align:center;">
+      <input type="password" id="adminPin" placeholder="PIN" maxlength="4"
+        style="background:#1a2d42; border:1px solid #3a5878; color:#eef4fc; padding:8px 16px; border-radius:8px; font-size:16px; width:100px; text-align:center; letter-spacing:4px;"
+        onkeydown="if(event.key==='Enter') checkAdminPin()" />
+      <button onclick="checkAdminPin()" style="margin-left:8px; background:#1a3050; border:1px solid #3a5878; color:#eef4fc; padding:8px 14px; border-radius:8px; cursor:pointer;">Gir</button>
+      <div id="adminError" style="color:#e05555; font-size:11px; margin-top:6px; display:none;">Hatalı PIN</div>
     </div>
   </div>
 </div>
@@ -446,6 +455,23 @@
 
   let weekOffset = 0;
   let currentUser = null;
+
+  function toggleAdminInput() {
+    const area = document.getElementById('adminInputArea');
+    area.style.display = area.style.display === 'none' ? 'block' : 'none';
+    if (area.style.display === 'block') document.getElementById('adminPin').focus();
+  }
+
+  function checkAdminPin() {
+    const pin = document.getElementById('adminPin').value;
+    if (pin === '0710') {
+      document.getElementById('adminError').style.display = 'none';
+      selectUser('__admin__');
+    } else {
+      document.getElementById('adminError').style.display = 'block';
+      document.getElementById('adminPin').value = '';
+    }
+  }
 
   function selectUser(name) {
     currentUser = name;
