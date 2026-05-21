@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personnel Tracking System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    @keyframes shimmer-move {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #dde1e7;
+      background-image:
+        radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.55) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 70%, rgba(255,255,255,0.45) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 10%, rgba(255,255,255,0.35) 0%, transparent 50%),
+        linear-gradient(135deg, #cdd2da 0%, #e8ecf0 30%, #f4f6f8 50%, #e2e6eb 70%, #d0d5de 100%);
+      color: #dce8f5;
+      min-height: 100vh;
+      padding: 40px 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(105deg,
+        transparent 0%,
+        transparent 38%,
+        rgba(255,255,255,0.18) 42%,
+        rgba(255,255,255,0.32) 46%,
+        rgba(255,255,255,0.18) 50%,
+        transparent 54%,
+        transparent 100%
+      );
+      background-size: 300% 100%;
+      animation: shimmer-move 5s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      content: none;
+    }
+
+    header, .user-bar, .week-nav, .table-wrapper, .save-btn, .saved-toast, .select-overlay {
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    header .logo {
+      height: 48px;
+      margin-bottom: 16px;
+      filter: invert(1) brightness(0) saturate(100%) invert(18%) sepia(30%) saturate(800%) hue-rotate(185deg) brightness(80%);
+    }
+
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 26px;
+      letter-spacing: 2px;
+      color: #c45000;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      font-size: 18px;
+      color: #5a7a9a;
+      letter-spacing: 1px;
+    }
+
+    .week-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .week-nav button {
+      background: #253d58;
+      border: 1px solid #3a5878;
+      color: #a8c8e8;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .week-nav button:hover { background: #2e4a6a; border-color: #5080a8; }
+    .week-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .week-nav button:disabled:hover { background: #253d58; border-color: #3a5878; }
+
+    .week-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1c2e45;
+      min-width: 220px;
+      text-align: center;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #243650;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #344e6a;
+      box-shadow: 0 8px 32px rgba(20,40,70,0.18);
+    }
+
+    thead th {
+      padding: 12px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #7fa3c4;
+      background: #1e3048;
+      border-bottom: 1px solid #344e6a;
+      text-align: center;
+    }
+
+    thead th.day-th {
+      background: #2a4668;
+      color: #c8dff0;
+    }
+
+    thead th.day-th.today-col {
+      background: #2e5fa0;
+      color: #ffffff;
+    }
+
+    tbody tr { border-bottom: 1px solid #304a66; }
+    tbody tr:last-child { border-bottom: 2px solid #3a5878; }
+    tbody tr.person-last { border-bottom: 2px solid #3a5878; }
+    tbody tr:hover { background: #2a4060; }
+
+    td {
+      padding: 10px 14px;
+      font-size: 13px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    td.name-cell {
+      font-weight: 700;
+      font-size: 15px;
+      text-align: left;
+      color: #ffffff;
+      white-space: nowrap;
+      border-right: 1px solid #344e6a;
+      background: #1e3a5c;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    td.category-cell {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #7fa3c4;
+      white-space: nowrap;
+      text-align: left;
+      border-right: 1px solid #344e6a;
+      padding-left: 12px;
+      background: #243650;
+    }
+
+    td.category-cell.total-cat {
+      color: #60a5e8;
+    }
+
+    td textarea {
+      width: 100%;
+      min-width: 110px;
+      height: 70px;
+      padding: 7px 8px;
+      border: 1px solid #5b8fbf;
+      border-radius: 8px;
+      background: #162840;
+      color: #e8f2ff;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      resize: vertical;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      line-height: 1.5;
+    }
+
+    td textarea:focus {
+      border-color: #74b3f0;
+      box-shadow: 0 0 0 3px rgba(91,155,213,0.28);
+      background: #1a3050;
+    }
+
+    td textarea:disabled {
+      background: #1e2e42;
+      color: #3d5a78;
+      border-color: #283d54;
+      cursor: not-allowed;
+    }
+
+    td input {
+      width: 68px;
+      padding: 7px 8px;
+      border: 1px solid #5b8fbf;
+      border-radius: 8px;
+      background: #162840;
+      color: #e8f2ff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    td input:focus {
+      border-color: #74b3f0;
+      box-shadow: 0 0 0 3px rgba(91,155,213,0.28);
+      background: #1a3050;
+    }
+
+    td input:disabled {
+      background: #1e2e42;
+      color: #3d5a78;
+      border-color: #283d54;
+      cursor: not-allowed;
+      font-weight: 400;
+    }
+
+    td.total-cell {
+      font-weight: 700;
+      font-size: 15px;
+      color: #eef4fc;
+      background: #1e3a5c;
+      border-left: 1px solid #344e6a;
+    }
+
+    td.today-col { background: rgba(46,95,160,0.2); }
+
+    .day-header { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .day-header .day-name { font-weight: 700; font-size: 12px; }
+    .day-header .day-date { font-size: 10px; opacity: 0.7; }
+
+    .save-btn {
+      display: block;
+      margin: 28px auto 0;
+      padding: 12px 40px;
+      background: #2e5fa0;
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.2s;
+    }
+
+    .save-btn:hover { background: #3a72b8; }
+
+    .saved-toast {
+      display: none;
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #60a5e8;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .user-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      color: #6b7a5e;
+    }
+
+    .user-bar strong { color: #4e5a3e; }
+
+    .user-bar button {
+      background: transparent;
+      border: 1px solid #8a9a74;
+      color: #6b7a5e;
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+    }
+
+    .user-bar button:hover { border-color: #4e5a3e; color: #4e5a3e; }
+
+    .select-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8,15,26,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .select-box {
+      background: #1e3048;
+      border: 1px solid #344e6a;
+      border-radius: 16px;
+      padding: 40px 48px;
+      text-align: center;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+
+    .select-box h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      color: #c8dff0;
+      letter-spacing: 2px;
+      margin-bottom: 28px;
+    }
+
+    .select-box .name-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .select-box .name-btns button {
+      background: #243650;
+      border: 1px solid #3a5878;
+      color: #eef4fc;
+      padding: 12px 48px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .select-box .name-btns button:hover {
+      background: #2e5fa0;
+      border-color: #5b9bd5;
+    }
+  </style>
+</head>
+<body>
+
+<div class="select-overlay" id="selectOverlay">
+  <div class="select-box">
+    <h2>WHO ARE YOU?</h2>
+    <div class="name-btns">
+      <button onclick="selectUser('Canan')">Canan</button>
+      <button onclick="selectUser('Furkan')">Furkan</button>
+      <button onclick="selectUser('İlkem')">İlkem</button>
+      <button onclick="selectUser('Görkem')">Görkem</button>
+      <button onclick="selectUser('__admin__')" style="margin-top:8px; border-color:#c45000; color:#c45000;">View All</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <img src="logo.svg" alt="Suits Finance" class="logo" />
+  <h1>YUKI DATA TRACKER</h1>
+  <p>Weekly Work Tracker</p>
+</header>
+
+<div class="user-bar" id="userBar" style="display:none;">
+  Logged in as: <strong id="userLabel"></strong>
+  <button onclick="changeUser()">Change</button>
+</div>
+
+<div class="week-nav">
+  <button id="prevBtn" onclick="changeWeek(-1)">&#8592; Previous Week</button>
+  <div class="week-label" id="weekLabel"></div>
+  <button onclick="changeWeek(1)">Next Week &#8594;</button>
+</div>
+
+<div class="table-wrapper">
+  <table id="trackTable">
+    <thead>
+      <tr id="headerRow1">
+        <th colspan="2" style="text-align:left; border-right: 1px solid #344e6a;">Personnel</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<button class="save-btn" onclick="saveData()">Save</button>
+<div class="saved-toast" id="savedToast">Saved.</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  emailjs.init({ publicKey: 'ALBLpdMUwv8iAM4sR' });
+</script>
+<script>
+  const { createClient } = supabase;
+  const db = createClient(
+    'https://nonttlukdfymmgfhwdqo.supabase.co',
+    'sb_publishable_nIFfbuDMkpfmmI6-pXrnKQ_tLII2Z2K'
+  );
+
+  function formatCompLines(el) {
+    const start = el.selectionStart;
+    const before = el.value;
+    const lines = before.split('\n');
+    const formatted = lines.map(l => {
+      if (l === '') return l;
+      if (l.startsWith('• ')) return l;
+      if (l.startsWith('•')) return '• ' + l.slice(1);
+      return '• ' + l;
+    });
+    const after = formatted.join('\n');
+    if (after === before) return;
+    const diff = after.length - before.length;
+    el.value = after;
+    el.selectionStart = el.selectionEnd = start + diff;
+  }
+
+  const PERSONNEL = ['Canan', 'Furkan', 'İlkem', 'Görkem'];
+  const DAYS_TR = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const CATEGORIES = ['Tussenrekeningen', 'Completed Companies'];
+  const CAT_KEYS = ['tuss', 'comp'];
+
+  let weekOffset = 0;
+  let currentUser = null;
+
+  function selectUser(name) {
+    currentUser = name;
+    localStorage.setItem('currentUser', name);
+    document.getElementById('selectOverlay').style.display = 'none';
+    document.getElementById('userBar').style.display = 'flex';
+    document.getElementById('userLabel').textContent = name === '__admin__' ? 'View All' : name;
+    render();
+  }
+
+  function changeUser() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    document.getElementById('selectOverlay').style.display = 'flex';
+    document.getElementById('userBar').style.display = 'none';
+  }
+
+  function getMondayOfWeek(offset) {
+    const base = new Date('2026-05-18');
+    const d = new Date(base);
+    d.setDate(d.getDate() + offset * 7);
+    return d;
+  }
+
+  function getWeekDates(offset) {
+    const monday = getMondayOfWeek(offset);
+    return Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(d.getDate() + i);
+      return d;
+    });
+  }
+
+  function formatDate(d) {
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+  }
+
+  function weekStart() {
+    return getMondayOfWeek(weekOffset).toISOString().slice(0, 10);
+  }
+
+  async function loadData() {
+    const { data, error } = await db
+      .from('tracking')
+      .select('*')
+      .eq('week_start', weekStart());
+    if (error || !data) return {};
+    const result = {};
+    data.forEach(row => {
+      if (!result[row.personnel]) result[row.personnel] = {};
+      result[row.personnel][row.category] = {
+        0: row.d0, 1: row.d1, 2: row.d2, 3: row.d3, 4: row.d4
+      };
+    });
+    return result;
+  }
+
+  async function saveData() {
+    const btn = document.querySelector('.save-btn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    const rows = [];
+    const targets = currentUser === '__admin__' ? PERSONNEL : [currentUser];
+    targets.forEach(name => {
+      CAT_KEYS.forEach(cat => {
+        const row = { week_start: weekStart(), personnel: name, category: cat, d0: null, d1: null, d2: null, d3: null, d4: null };
+        let hasValue = false;
+        for (let d = 0; d < 5; d++) {
+          const input = document.getElementById(`inp_${name}_${cat}_${d}`);
+          const val = input && input.value ? input.value : null;
+          row[`d${d}`] = val;
+          if (val) hasValue = true;
+        }
+        if (hasValue) rows.push(row);
+      });
+    });
+
+    const { error } = await db
+      .from('tracking')
+      .upsert(rows, { onConflict: 'week_start,personnel,category' });
+
+    btn.textContent = 'Save';
+    btn.disabled = false;
+
+    const toast = document.getElementById('savedToast');
+    toast.textContent = error ? `Error: ${error.message}` : 'Saved.';
+    toast.style.color = error ? '#f87171' : '#60a5e8';
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 6000);
+
+    if (!error) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      const monday = getMondayOfWeek(weekOffset);
+      const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
+      const weekStr = formatDate(monday) + ' – ' + formatDate(friday);
+
+      const summary = PERSONNEL.map(name => {
+        const tuss = Array.from({length:5}, (_,d) => {
+          const inp = document.getElementById(`inp_${name}_tuss_${d}`);
+          return inp && inp.value ? inp.value : '—';
+        }).join(' | ');
+        const total = Array.from({length:5}, (_,d) => {
+          const inp = document.getElementById(`inp_${name}_total_${d}`);
+          return inp && inp.value ? inp.value : '—';
+        }).join(' | ');
+        return `${name} - Tussenrekeningen: ${tuss} - Total Number: ${total}`;
+      }).join(' || ');
+
+      emailjs.send('service_wpjus3l', 'template_nueix1c', {
+        to_email: 'emre@suitsfinance.com',
+        week: weekStr,
+        time: timeStr,
+        summary: summary
+      }).then(() => {
+        console.log('Email sent successfully');
+      }).catch((err) => {
+        console.error('Email error:', JSON.stringify(err));
+      });
+    }
+  }
+
+  function updateTotal(name, catKey) {
+    const el = document.getElementById(`total_${name}_${catKey}`);
+    if (!el) return;
+    if (catKey === 'tuss') {
+      let sum = 0;
+      for (let d = 0; d < 5; d++) {
+        const input = document.getElementById(`inp_${name}_${catKey}_${d}`);
+        if (input && input.value) sum += parseInt(input.value) || 0;
+      }
+      el.textContent = sum || '—';
+    } else {
+      el.textContent = '—';
+    }
+  }
+
+  function isAccessible(date) {
+    const now = new Date();
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dateOnly = new Date(date); dateOnly.setHours(0,0,0,0);
+    if (dateOnly < today) return true;
+    if (dateOnly > today) return false;
+    return now.getHours() >= 16;
+  }
+
+  function isToday(date) {
+    return date.toDateString() === new Date().toDateString();
+  }
+
+  function refreshInputStates() {
+    const dates = getWeekDates(weekOffset);
+    PERSONNEL.forEach(name => {
+      CAT_KEYS.forEach(cat => {
+        for (let d = 0; d < 5; d++) {
+          const input = document.getElementById(`inp_${name}_${cat}_${d}`);
+          if (input) input.disabled = !isAccessible(dates[d]) || (currentUser !== '__admin__' && name !== currentUser);
+        }
+      });
+    });
+  }
+
+  async function render() {
+    const dates = getWeekDates(weekOffset);
+    const monday = getMondayOfWeek(weekOffset);
+    const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
+    document.getElementById('weekLabel').textContent =
+      formatDate(monday) + ' – ' + formatDate(friday) + ' / 2026';
+
+    const headerRow = document.getElementById('headerRow1');
+    headerRow.innerHTML = '<th colspan="2" style="text-align:left; border-right:1px solid #344e6a;">Personnel</th>';
+    dates.forEach((date, i) => {
+      const th = document.createElement('th');
+      th.className = 'day-th' + (isToday(date) ? ' today-col' : '');
+      th.innerHTML = `<div class="day-header"><span class="day-name">${DAYS_TR[i]}</span><span class="day-date">${formatDate(date)}</span></div>`;
+      headerRow.appendChild(th);
+    });
+    const thTotal = document.createElement('th');
+    thTotal.style.cssText = 'background:#1e3a5c;color:#60a5e8;border-left:1px solid #344e6a;font-weight:700;letter-spacing:1px;';
+    thTotal.textContent = 'Weekly';
+    headerRow.appendChild(thTotal);
+
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    PERSONNEL.forEach((name) => {
+      CATEGORIES.forEach((catLabel, ci) => {
+        const catKey = CAT_KEYS[ci];
+        const tr = document.createElement('tr');
+        if (ci === CATEGORIES.length - 1) tr.classList.add('person-last');
+
+        if (ci === 0) {
+          const nameTd = document.createElement('td');
+          nameTd.className = 'name-cell';
+          nameTd.rowSpan = CATEGORIES.length;
+          nameTd.textContent = name;
+          tr.appendChild(nameTd);
+        }
+
+        const catTd = document.createElement('td');
+        catTd.className = 'category-cell' + (ci === 1 ? ' total-cat' : '');
+        catTd.textContent = catLabel;
+        tr.appendChild(catTd);
+
+        for (let d = 0; d < 5; d++) {
+          const td = document.createElement('td');
+          if (isToday(dates[d])) td.classList.add('today-col');
+          let field;
+          if (catKey === 'comp') {
+            field = document.createElement('textarea');
+            field.placeholder = 'Company names...';
+          } else {
+            field = document.createElement('input');
+            field.type = 'number';
+            field.min = '0';
+            field.placeholder = '0';
+          }
+          field.id = `inp_${name}_${catKey}_${d}`;
+          field.disabled = !isAccessible(dates[d]) || (currentUser !== '__admin__' && name !== currentUser);
+          field.addEventListener('input', () => {
+            if (catKey === 'comp') formatCompLines(field);
+            updateTotal(name, catKey);
+          });
+          td.appendChild(field);
+          tr.appendChild(td);
+        }
+
+        const totalTd = document.createElement('td');
+        totalTd.className = 'total-cell';
+        totalTd.id = `total_${name}_${catKey}`;
+        totalTd.textContent = '—';
+        tr.appendChild(totalTd);
+
+        tbody.appendChild(tr);
+      });
+    });
+
+    const data = await loadData();
+    PERSONNEL.forEach(name => {
+      CAT_KEYS.forEach(cat => {
+        for (let d = 0; d < 5; d++) {
+          const input = document.getElementById(`inp_${name}_${cat}_${d}`);
+          if (input && data[name]?.[cat]?.[d] != null) {
+            input.value = data[name][cat][d] ?? '';
+            if (cat === 'comp' && input.value) formatCompLines(input);
+          }
+        }
+        updateTotal(name, cat);
+      });
+    });
+  }
+
+  async function changeWeek(dir) {
+    if (weekOffset + dir < 0) return;
+    weekOffset += dir;
+    await render();
+    document.getElementById('prevBtn').disabled = weekOffset === 0;
+  }
+
+  const savedUser = localStorage.getItem('currentUser');
+  if (savedUser && PERSONNEL.includes(savedUser)) {
+    selectUser(savedUser);
+  }
+
+  render().then(() => {
+    document.getElementById('prevBtn').disabled = true;
+  });
+
+  setInterval(refreshInputStates, 60000);
+</script>
+
+</body>
+</html>
